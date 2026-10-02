@@ -195,5 +195,98 @@ public static class DbSeeder
                 });
             await db.SaveChangesAsync(ct);
         }
+
+        if (!await db.Vehicles.AnyAsync(ct))
+        {
+            db.Vehicles.AddRange(
+                new Vehicle
+                {
+                    Type = VehicleType.Van,
+                    RegistrationNumber = "WP-CAD-1029",
+                    Capacity = 7,
+                    HasAC = true,
+                    SeatConfiguration = "2-2-3 (Executive Van)",
+                    MaintenanceStatus = VehicleMaintenanceStatus.Available
+                },
+                new Vehicle
+                {
+                    Type = VehicleType.Van,
+                    RegistrationNumber = "WP-CAA-5544",
+                    Capacity = 12,
+                    HasAC = true,
+                    SeatConfiguration = "2-3-3-4 (Commuter Van)",
+                    MaintenanceStatus = VehicleMaintenanceStatus.Available
+                },
+                new Vehicle
+                {
+                    Type = VehicleType.SUV,
+                    RegistrationNumber = "WP-CAB-7788",
+                    Capacity = 4,
+                    HasAC = true,
+                    SeatConfiguration = "2-2 Luxury (4x4 SUV)",
+                    MaintenanceStatus = VehicleMaintenanceStatus.Available
+                },
+                new Vehicle
+                {
+                    Type = VehicleType.Coach,
+                    RegistrationNumber = "WP-NA-3344",
+                    Capacity = 32,
+                    HasAC = true,
+                    SeatConfiguration = "2-2 across 8 rows (Mini Coach)",
+                    MaintenanceStatus = VehicleMaintenanceStatus.Available
+                });
+            await db.SaveChangesAsync(ct);
+        }
+
+        if (!await db.Drivers.AnyAsync(ct))
+        {
+            db.Drivers.AddRange(
+                new Driver
+                {
+                    Name = "Sunil Jayawardena",
+                    LicenseNumber = "B-1029384",
+                    ContactInfo = "+94711122334"
+                },
+                new Driver
+                {
+                    Name = "Pradeep Kumara",
+                    LicenseNumber = "B-5544332",
+                    ContactInfo = "+94772233445"
+                },
+                new Driver
+                {
+                    Name = "Ruwan Mendis",
+                    LicenseNumber = "B-7788990",
+                    ContactInfo = "+94753344556"
+                });
+            await db.SaveChangesAsync(ct);
+        }
+
+        if (!await db.Guides.AnyAsync(ct))
+        {
+            db.Guides.AddRange(
+                new Guide
+                {
+                    Name = "Janith Wijesinghe",
+                    Languages = ["English", "Sinhala", "German"],
+                    Specializations = ["Cultural", "Historical Sites"],
+                    ContactInfo = "+94771239876"
+                },
+                new Guide
+                {
+                    Name = "Kavinda Jayasuriya",
+                    Languages = ["English", "Sinhala", "Italian"],
+                    Specializations = ["Adventure", "Mountain Trekking"],
+                    ContactInfo = "+94713456789"
+                },
+                new Guide
+                {
+                    Name = "Dilhani Alwis",
+                    Languages = ["English", "Sinhala", "Mandarin"],
+                    Specializations = ["Beach", "Coastal Tours"],
+                    ContactInfo = "+94784567890"
+                });
+            await db.SaveChangesAsync(ct);
+        }
     }
 }

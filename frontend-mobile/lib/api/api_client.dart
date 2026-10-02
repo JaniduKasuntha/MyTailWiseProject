@@ -37,9 +37,9 @@ class ApiClient {
       return envUrl;
     }
     if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:5080';
+      return 'http://10.0.2.2:5081';
     }
-    return 'http://localhost:5080';
+    return 'http://localhost:5081';
   }();
 
   final http.Client _httpClient;
