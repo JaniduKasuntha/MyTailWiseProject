@@ -1,0 +1,169 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using TrailWise.Api.Contracts.Auth;
+using TrailWise.Infrastructure.Services;
+
+namespace TrailWise.Api.Controllers;
+
+[ApiController]
+[Route("api/auth")]
+public class AuthController : ControllerBase
+{
+    private readonly IAuthService _authService;
+
+    public AuthController(IAuthService authService)
+    {
+        _authService = authService;
+    }
+
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<ActionResult<AuthResponse>> Register(RegisterTravelerRequest request, CancellationToken ct)
+    {
+        var result = await _authService.RegisterTravelerAsync(request.Name, request.Email, request.Password, request.ContactNumber, ct);
+        if (!result.Succeeded)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: result.Error);
+        }
+
+        return Ok(new AuthResponse(result.Token!, UserDto.FromEntity(result.User!)));
+    }
+
+    [HttpPost("login")]
+    [AllowAnonymous]
+    [EnableRateLimiting("LoginRateLimiter")]
+    public async Task<ActionResult<AuthResponse>> Login(LoginRequest request, CancellationToken ct)
+    {
+        var result = await _authService.LoginAsync(request.Email, request.Password, ct);
+        if (!result.Succeeded)
+        {
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, title: result.Error);
+        }
+
+        return Ok(new AuthResponse(result.Token!, UserDto.FromEntity(result.User!)));
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> Me(CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var user = await _authService.GetByIdAsync(userId.Value, ct);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(UserDto.FromEntity(user));
+    }
+
+    [HttpPost("admin/users")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<UserDto>> CreateUser(CreateUserRequest request, CancellationToken ct)
+    {
+        var result = await _authService.CreateUserAsync(request.Name, request.Email, request.Password, request.ContactNumber, request.Role, ct);
+        if (!result.Succeeded)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: result.Error);
+        }
+
+        return Ok(UserDto.FromEntity(result.User!));
+    }
+
+    [HttpGet("admin/users")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<IReadOnlyList<UserDto>>> GetStaff(CancellationToken ct)
+    {
+        var staff = await _authService.GetStaffAsync(ct);
+        return Ok(staff.Select(UserDto.FromEntity).ToList());
+    }
+
+    [HttpDelete("admin/users/{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteUser(Guid id, CancellationToken ct)
+    {
+        var requestedById = GetUserId();
+        if (requestedById is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _authService.DeleteUserAsync(id, requestedById.Value, ct);
+        if (!result.Succeeded)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: result.Error);
+        }
+
+        return NoContent();
+    }
+
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> UpdateProfile(UpdateProfileRequest request, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _authService.UpdateProfileAsync(userId.Value, request.Name, request.Email, request.ContactNumber, ct);
+        if (!result.Succeeded)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: result.Error);
+        }
+
+        return Ok(UserDto.FromEntity(result.User!));
+    }
+
+    [HttpPut("me/password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _authService.ChangePasswordAsync(userId.Value, request.CurrentPassword, request.NewPassword, ct);
+        if (!result.Succeeded)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: result.Error);
+        }
+
+        return NoContent();
+    }
+
+    [HttpDelete("me")]
+    [Authorize]
+    public async Task<IActionResult> DeleteMe(CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _authService.DeleteSelfAsync(userId.Value, ct);
+        if (!result.Succeeded)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: result.Error);
+        }
+
+        return NoContent();
+    }
+
+    private Guid? GetUserId()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        return Guid.TryParse(userId, out var id) ? id : null;
+    }
+}
