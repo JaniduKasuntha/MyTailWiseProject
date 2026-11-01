@@ -1,4 +1,4 @@
-# 🌍 TrailWise — Intelligent Tour Management & Travel Operations Ecosystem
+# TrailWise — Intelligent Tour Management & Travel Operations Ecosystem
 
 [![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core_8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![React 19](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
