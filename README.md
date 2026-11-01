@@ -4,9 +4,9 @@ Smart Tour Management & Travel Planning System — Person 1 slice (Tour Package 
 Management + Coordinator/Planning Agent) and the shared project foundation (DB schema, auth,
 API skeleton, web + mobile shells).
 
-backend deployed at : https://trailwise.onrender.com
+frontend deployed at : https://trailwise-xi.vercel.app/
 
-frontend deployed at : https://drive.google.com/drive/folders/1O3mV2JGF5MCdc4SF8WNbP16otNSG9Tdn
+backend deployed at : https://trailwise.onrender.com
 
 Mobile apk : https://drive.google.com/drive/folders/1O3mV2JGF5MCdc4SF8WNbP16otNSG9Tdn
 
