@@ -37,9 +37,9 @@ class ApiClient {
       return envUrl;
     }
     if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:5081';
+      return 'http://10.0.2.2:5080';
     }
-    return 'http://localhost:5081';
+    return 'http://localhost:5080';
   }();
 
   final http.Client _httpClient;
@@ -211,6 +211,25 @@ class ApiClient {
     final response = await get('/api/bookings/$bookingId/itinerary');
     if (response is List) {
       return response
+          .whereType<Map<String, dynamic>>()
+          .map(ItineraryStep.fromJson)
+          .toList();
+    }
+    return [];
+  }
+
+  Future<List<ItineraryStep>> setItinerary(
+    String bookingId,
+    List<Map<String, dynamic>> steps,
+  ) async {
+    final response = await _httpClient.post(
+      Uri.parse('$baseUrl/api/bookings/$bookingId/itinerary'),
+      headers: _headers,
+      body: jsonEncode({'steps': steps}),
+    );
+    final decoded = _decode(response);
+    if (decoded is List) {
+      return decoded
           .whereType<Map<String, dynamic>>()
           .map(ItineraryStep.fromJson)
           .toList();

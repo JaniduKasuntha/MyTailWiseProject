@@ -1,5 +1,3 @@
-name: mytailwiseproject
-
 services:
   db:
     image: postgres:16
@@ -11,7 +9,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - mytailwise_pg_data:/var/lib/postgresql/data
+      - trailwise_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -46,8 +44,8 @@ services:
       NOTIFY_LK_API_KEY: ${NOTIFY_LK_API_KEY}
       NOTIFY_LK_SENDER_ID: ${NOTIFY_LK_SENDER_ID:-NotifyDEMO}
     volumes:
-      - mytailwise_uploads:/app/wwwroot/uploads
-      - mytailwise_private_uploads:/app/private_uploads
+      - trailwise_uploads:/app/wwwroot/uploads
+      - trailwise_private_uploads:/app/private_uploads
     ports:
       - "${BACKEND_PORT:-5080}:8080"
 
@@ -64,7 +62,6 @@ services:
       - "${FRONTEND_WEB_PORT:-5173}:5173"
 
 volumes:
-  mytailwise_pg_data:
-  mytailwise_uploads:
-  mytailwise_private_uploads:
-
+  trailwise_pg_data:
+  trailwise_uploads:
+  trailwise_private_uploads:
