@@ -94,7 +94,7 @@ public class DriversController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = FleetCoordinatorOrAdmin)]
+    [Authorize(Roles = "FleetCoordinator")]
     public async Task<ActionResult<DriverDto>> Create(CreateDriverRequest request, CancellationToken ct)
     {
         var name = request.Name?.Trim() ?? string.Empty;
@@ -160,15 +160,42 @@ public class DriversController : ControllerBase
             }
         }
 
-        var driver = new Driver
+        // If a driver was already provisioned or linked by auth service for this user, reuse and update it
+        Driver driver;
+        if (linkedUserId.HasValue)
         {
-            Name = name,
-            LicenseNumber = licenseNumber,
-            ContactInfo = contactInfo,
-            UserId = linkedUserId
-        };
+            var existingLinkedDriver = await _db.Drivers.FirstOrDefaultAsync(d => d.UserId == linkedUserId.Value, ct);
+            if (existingLinkedDriver != null)
+            {
+                existingLinkedDriver.Name = name;
+                existingLinkedDriver.LicenseNumber = licenseNumber;
+                existingLinkedDriver.ContactInfo = contactInfo;
+                driver = existingLinkedDriver;
+            }
+            else
+            {
+                driver = new Driver
+                {
+                    Name = name,
+                    LicenseNumber = licenseNumber,
+                    ContactInfo = contactInfo,
+                    UserId = linkedUserId
+                };
+                _db.Drivers.Add(driver);
+            }
+        }
+        else
+        {
+            driver = new Driver
+            {
+                Name = name,
+                LicenseNumber = licenseNumber,
+                ContactInfo = contactInfo,
+                UserId = null
+            };
+            _db.Drivers.Add(driver);
+        }
 
-        _db.Drivers.Add(driver);
         await _db.SaveChangesAsync(ct);
 
         if (driver.UserId.HasValue)
@@ -262,6 +289,14 @@ public class DriversController : ControllerBase
                     {
                         driver.UserId = authResult.User.Id;
                         driver.User = authResult.User;
+
+                        // If AuthService provisioned an extra fallback Driver entity for this new user, clean it up
+                        var extraCreatedDriver = await _db.Drivers
+                            .FirstOrDefaultAsync(d => d.Id != driver.Id && d.UserId == authResult.User.Id, ct);
+                        if (extraCreatedDriver != null)
+                        {
+                            _db.Drivers.Remove(extraCreatedDriver);
+                        }
                     }
                 }
             }
@@ -298,9 +333,15 @@ public class DriversController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// The signed-in driver's own trips. Driver accounts only, and only through the driver record
+    /// linked to the account (Driver.UserId). There is deliberately no fallback by phone number or
+    /// name: the response carries travelers' names and phone numbers, which must never reach an
+    /// account that merely resembles a driver. Fleet Coordinator and Admin use the fleet endpoints.
+    /// </summary>
     [HttpGet("me/assignments")]
     [HttpGet("assignments")]
-    [Authorize(Roles = "Driver,FleetCoordinator,Admin")]
+    [Authorize(Roles = "Driver")]
     public async Task<ActionResult<IReadOnlyList<VehicleAssignmentDetailDto>>> GetMyAssignments(CancellationToken ct)
     {
         var currentUserId = GetUserId();
@@ -309,23 +350,9 @@ public class DriversController : ControllerBase
             return Unauthorized();
         }
 
-        // Find the driver record linked to this user (or fallback to matching by contact info / name)
         var driver = await _db.Drivers
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.UserId == currentUserId.Value, ct);
-
-        if (driver is null)
-        {
-            // If the user has Driver role, check by contact number or name
-            var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId.Value, ct);
-            if (user != null)
-            {
-                driver = await _db.Drivers
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(d => (!string.IsNullOrEmpty(user.ContactNumber) && d.ContactInfo == user.ContactNumber) ||
-                                              (!string.IsNullOrEmpty(user.Name) && d.Name.ToLower() == user.Name.ToLower()), ct);
-            }
-        }
 
         if (driver is null)
         {

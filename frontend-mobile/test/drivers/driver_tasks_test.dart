@@ -32,7 +32,7 @@ class _MockAuthProvider extends ChangeNotifier implements AuthProvider {
   Future<bool> login(String email, String password) async => true;
 
   @override
-  Future<bool> register(String name, String email, String password) async => true;
+  Future<bool> register(String name, String email, String password, String contactNumber) async => true;
 
   @override
   Future<void> restoreSession() async {}
@@ -55,8 +55,8 @@ Map<String, dynamic> _sampleDriverAssignmentJson({
   String driverId = 'drv-1',
   String driverName = 'Ruwan Jayasinghe',
   String driverContact = '+94771234567',
-  String startDate = '2026-10-15',
-  String endDate = '2026-10-20',
+  String startDate = '2099-10-15',
+  String endDate = '2099-10-20',
   String vehicleType = 'Van',
   int capacity = 7,
   bool hasAC = true,

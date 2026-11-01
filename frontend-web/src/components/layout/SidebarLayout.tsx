@@ -64,17 +64,17 @@ export function SidebarLayout({ navItems, pageTitles }: SidebarLayoutProps) {
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      isActive ? 'bg-brand-soft text-brand-fg' : 'text-fg-muted hover:bg-neutral-soft hover:text-fg'
     }`;
 
   const collapsedNavLinkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center justify-center rounded-lg p-2.5 transition ${
-      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      isActive ? 'bg-brand-soft text-brand-fg' : 'text-fg-muted hover:bg-neutral-soft hover:text-fg'
     }`;
 
   const subNavLinkClass = ({ isActive }: { isActive: boolean }) =>
     `block rounded-lg px-3 py-2 text-sm font-medium transition ${
-      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+      isActive ? 'bg-brand-soft text-brand-fg' : 'text-fg-muted hover:bg-neutral-soft hover:text-fg'
     }`;
 
   function renderNav(isCollapsed: boolean) {
@@ -92,7 +92,7 @@ export function SidebarLayout({ navItems, pageTitles }: SidebarLayoutProps) {
       if (item.children) {
         return (
           <div key={item.to} className="pt-4">
-            <p className="flex items-center gap-2 px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="flex items-center gap-2 px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-fg-muted">
               <Icon className="h-4 w-4" /> {item.label}
             </p>
             <div className="mt-1 space-y-1 pl-3">
@@ -127,7 +127,7 @@ export function SidebarLayout({ navItems, pageTitles }: SidebarLayoutProps) {
           )}
           <button
             onClick={() => setMobileOpen(false)}
-            className="relative z-10 text-slate-500 hover:text-slate-700 md:hidden"
+            className="relative z-10 text-fg-muted hover:text-fg md:hidden"
             aria-label="Close menu"
           >
             <CloseIcon className="h-5 w-5" />
@@ -138,7 +138,7 @@ export function SidebarLayout({ navItems, pageTitles }: SidebarLayoutProps) {
           <div className={`hidden px-4 pb-2 md:flex ${isCollapsed ? 'justify-center' : 'justify-end'}`}>
             <button
               onClick={toggleCollapsed}
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="rounded-lg p-1.5 text-fg-muted transition hover:bg-neutral-soft hover:text-fg"
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
@@ -151,11 +151,11 @@ export function SidebarLayout({ navItems, pageTitles }: SidebarLayoutProps) {
           {renderNav(isCollapsed)}
         </nav>
 
-        <div className="border-t border-slate-200 p-3">
+        <div className="border-t border-border p-3">
           <button
             onClick={logout}
             title="Log out"
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 ${
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-danger transition hover:bg-danger-soft ${
               isCollapsed ? 'w-auto justify-center' : 'w-full'
             }`}
           >
@@ -168,9 +168,9 @@ export function SidebarLayout({ navItems, pageTitles }: SidebarLayoutProps) {
   }
 
   return (
-    <div className="min-h-svh bg-slate-50 md:flex">
+    <div className="min-h-svh bg-surface md:flex">
       <aside
-        className={`hidden md:flex md:flex-none md:flex-col md:border-r md:border-slate-200 md:bg-white ${
+        className={`hidden md:flex md:flex-none md:flex-col md:border-r md:border-border md:bg-surface-raised ${
           collapsed ? 'md:w-20' : 'md:w-64'
         }`}
       >
@@ -180,28 +180,28 @@ export function SidebarLayout({ navItems, pageTitles }: SidebarLayoutProps) {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="fixed inset-0 bg-slate-900/40" onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex h-full w-72 flex-col bg-white shadow-xl">
+          <aside className="relative flex h-full w-72 flex-col bg-surface-raised shadow-xl">
             {sidebarChrome(false, false)}
           </aside>
         </div>
       )}
 
       <div className="flex-1">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-gradient-to-r before:from-brand-500 before:via-accent-500 before:to-brand-500">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface-raised/90 px-6 py-4 backdrop-blur before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-gradient-to-r before:from-brand-500 before:via-accent-500 before:to-brand-500">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="text-slate-500 hover:text-slate-700 md:hidden"
+              className="text-fg-muted hover:text-fg md:hidden"
               aria-label="Open menu"
             >
               <MenuIcon className="h-6 w-6" />
             </button>
-            <h1 className="font-heading text-lg font-bold text-slate-900">{title}</h1>
+            <h1 className="font-heading text-lg font-bold text-fg">{title}</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold text-slate-700">{user?.name}</p>
-              <p className="text-xs text-slate-500">{user && (ROLE_DISPLAY_LABELS[user.role] ?? user.role)}</p>
+              <p className="text-sm font-semibold text-fg">{user?.name}</p>
+              <p className="text-xs text-fg-muted">{user && (ROLE_DISPLAY_LABELS[user.role] ?? user.role)}</p>
             </div>
             {user && <Avatar name={user.name} size="sm" />}
           </div>

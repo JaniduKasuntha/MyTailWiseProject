@@ -85,7 +85,7 @@ describe('OpsBookingsPage', () => {
     expect(await screen.findByText(/could not load bookings/i)).toBeInTheDocument();
   });
 
-  it('shows Approve only for PendingApproval, Reject for PendingApproval or NeedsManualReview, and not Confirmed', async () => {
+  it('shows Reject for PendingApproval or NeedsManualReview, Mark Completed for Confirmed, and no Approve button', async () => {
     vi.spyOn(bookingsApi, 'getAllBookings').mockResolvedValue([
       sampleBooking({ id: 'pending-1', status: 'PendingApproval' }),
       sampleBooking({ id: 'confirmed-1', status: 'Confirmed' }),
@@ -93,42 +93,25 @@ describe('OpsBookingsPage', () => {
 
     renderPage();
 
-    await screen.findByText('PendingApproval');
-    expect(screen.getAllByRole('button', { name: /^approve$/i })).toHaveLength(1);
+    await screen.findByText('Pending Approval');
+    expect(screen.queryByRole('button', { name: /^approve$/i })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /^reject$/i })).toHaveLength(1);
     expect(screen.getByRole('button', { name: /mark completed/i })).toBeInTheDocument();
   });
 
-  it('shows Assign Tour Guide, Reject, and Cancel for NeedsManualReview, but does NOT show active Approve action', async () => {
+  it('shows Reject and Cancel for NeedsManualReview, but does NOT show active Approve action or Assign Tour Guide', async () => {
     vi.spyOn(bookingsApi, 'getAllBookings').mockResolvedValue([
       sampleBooking({ id: 'review-1', status: 'NeedsManualReview' }),
     ]);
 
     renderPage();
 
-    await screen.findByText('NeedsManualReview');
+    await screen.findByText('Needs Manual Review');
     expect(screen.queryByRole('button', { name: /^approve$/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^reject$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^cancel$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /assign tour guide/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /assign tour guide/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view agent workflow/i })).toBeInTheDocument();
-  });
-
-  it('approves a pending booking and updates its status in place', async () => {
-    vi.spyOn(bookingsApi, 'getAllBookings').mockResolvedValue([
-      sampleBooking({ status: 'PendingApproval' }),
-    ]);
-    const decideSpy = vi
-      .spyOn(bookingsApi, 'decideBooking')
-      .mockResolvedValue(sampleBookingDto({ status: 'Confirmed' }));
-
-    renderPage();
-    await screen.findByText('PendingApproval');
-
-    await userEvent.click(screen.getByRole('button', { name: /^approve$/i }));
-
-    await waitFor(() => expect(screen.getByText('Confirmed')).toBeInTheDocument());
-    expect(decideSpy).toHaveBeenCalledWith('booking-1', { decision: 'Approve' });
   });
 
   it('rejects a booking with notes via the confirm dialog', async () => {
@@ -140,7 +123,7 @@ describe('OpsBookingsPage', () => {
       .mockResolvedValue(sampleBookingDto({ status: 'Cancelled' }));
 
     renderPage();
-    await screen.findByText('NeedsManualReview');
+    await screen.findByText('Needs Manual Review');
 
     await userEvent.click(screen.getByRole('button', { name: /^reject$/i }));
     await userEvent.type(screen.getByLabelText(/notes/i), 'Budget too low');
@@ -181,7 +164,7 @@ describe('OpsBookingsPage', () => {
     vi.spyOn(bookingsApi, 'getAllBookings').mockResolvedValue([sampleBooking({ status: 'PendingApproval' })]);
 
     renderPage();
-    await screen.findByText('PendingApproval');
+    await screen.findByText('Pending Approval');
 
     expect(screen.queryByRole('button', { name: /^itinerary$/i })).not.toBeInTheDocument();
   });
@@ -214,130 +197,17 @@ describe('OpsBookingsPage', () => {
     expect(await screen.findByText(/City tour/)).toBeInTheDocument();
   });
 
-  it('shows "Assign Tour Guide" only for NeedsManualReview bookings, not Confirmed', async () => {
+  it('does not show "Assign Tour Guide" button or guide modal for NeedsManualReview or any other status in Ops view', async () => {
     vi.spyOn(bookingsApi, 'getAllBookings').mockResolvedValue([
       sampleBooking({ id: 'review-1', status: 'NeedsManualReview' }),
       sampleBooking({ id: 'confirmed-1', status: 'Confirmed' }),
+      sampleBooking({ id: 'pending-1', status: 'PendingApproval' }),
     ]);
 
     renderPage();
-    await screen.findByText('NeedsManualReview');
+    await screen.findByText('Needs Manual Review');
 
-    const assignBtns = screen.getAllByRole('button', { name: /assign tour guide/i });
-    expect(assignBtns).toHaveLength(1);
-  });
-
-  it('opens assignment modal, loads available guides, and shows guide info', async () => {
-    vi.spyOn(bookingsApi, 'getAllBookings').mockResolvedValue([
-      sampleBooking({ id: 'review-1', status: 'NeedsManualReview', packageName: 'Safari Adventure' }),
-    ]);
-    const guidesSpy = vi.spyOn(bookingsApi, 'getAvailableGuidesForBooking').mockResolvedValue([
-      {
-        guideId: 'guide-1',
-        name: 'Guide Alpha',
-        languages: ['English', 'German'],
-        specializations: ['Wildlife'],
-        contactInfo: '+94771234567',
-        matchesSpecialization: true,
-        matchesLanguage: true,
-        notes: 'Matches package theme: Wildlife',
-      },
-    ]);
-
-    renderPage();
-    await screen.findByText('NeedsManualReview');
-
-    await userEvent.click(screen.getByRole('button', { name: /assign tour guide/i }));
-
-    expect(await screen.findByRole('heading', { name: /assign tour guide/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/Safari Adventure/).length).toBeGreaterThanOrEqual(1);
-    expect(await screen.findByText('Guide Alpha')).toBeInTheDocument();
-    expect(screen.getByText(/Matches package theme: Wildlife/)).toBeInTheDocument();
-    expect(guidesSpy).toHaveBeenCalledWith('review-1');
-  });
-
-  it('allows selecting a guide, shows confirmation prompt, and confirms assignment successfully', async () => {
-    vi.spyOn(bookingsApi, 'getAllBookings')
-      .mockResolvedValueOnce([
-        sampleBooking({ id: 'review-1', status: 'NeedsManualReview' }),
-      ])
-      .mockResolvedValue([
-        sampleBooking({ id: 'review-1', status: 'Confirmed' }),
-      ]);
-    vi.spyOn(bookingsApi, 'getAvailableGuidesForBooking').mockResolvedValue([
-      {
-        guideId: 'guide-1',
-        name: 'Guide Alpha',
-        languages: ['English'],
-        specializations: ['Wildlife'],
-        contactInfo: '+94771234567',
-        matchesSpecialization: true,
-        matchesLanguage: true,
-      },
-    ]);
-    const assignSpy = vi.spyOn(bookingsApi, 'assignGuide').mockResolvedValue({
-      bookingId: 'review-1',
-      guideId: 'guide-1',
-      status: 'Confirmed',
-    });
-
-    renderPage();
-    await screen.findByText('NeedsManualReview');
-
-    await userEvent.click(screen.getByRole('button', { name: /assign tour guide/i }));
-    await screen.findByText('Guide Alpha');
-
-    // Select guide radio
-    await userEvent.click(screen.getByRole('radio'));
-
-    // Click Assign Guide
-    await userEvent.click(screen.getByRole('button', { name: /^assign guide$/i }));
-
-    // Confirmation shown
-    expect(await screen.findByRole('button', { name: /confirm assignment/i })).toBeInTheDocument();
-    expect(screen.getByText((_, el) => el?.textContent === 'Assign Guide Alpha to this booking?')).toBeInTheDocument();
-
-    // Confirm assignment
-    await userEvent.click(screen.getByRole('button', { name: /confirm assignment/i }));
-
-    await waitFor(() =>
-      expect(assignSpy).toHaveBeenCalledWith('review-1', 'guide-1'),
-    );
-    expect(await screen.findByText(/guide successfully assigned/i)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Confirmed')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /assign tour guide/i })).not.toBeInTheDocument();
-  });
-
-  it('displays error message on assignment conflict and reloads available guides', async () => {
-    vi.spyOn(bookingsApi, 'getAllBookings').mockResolvedValue([
-      sampleBooking({ id: 'review-1', status: 'NeedsManualReview' }),
-    ]);
-    const guidesSpy = vi.spyOn(bookingsApi, 'getAvailableGuidesForBooking').mockResolvedValue([
-      {
-        guideId: 'guide-1',
-        name: 'Guide Alpha',
-        languages: ['English'],
-        specializations: ['Wildlife'],
-        contactInfo: '+94771234567',
-        matchesSpecialization: true,
-        matchesLanguage: true,
-      },
-    ]);
-    vi.spyOn(bookingsApi, 'assignGuide').mockRejectedValue(
-      new Error('Selected guide is no longer available for this booking.'),
-    );
-
-    renderPage();
-    await screen.findByText('NeedsManualReview');
-
-    await userEvent.click(screen.getByRole('button', { name: /assign tour guide/i }));
-    await screen.findByText('Guide Alpha');
-
-    await userEvent.click(screen.getByRole('radio'));
-    await userEvent.click(screen.getByRole('button', { name: /^assign guide$/i }));
-    await userEvent.click(screen.getByRole('button', { name: /confirm assignment/i }));
-
-    expect(await screen.findByText(/selected guide is no longer available/i)).toBeInTheDocument();
-    expect(guidesSpy).toHaveBeenCalledTimes(2); // Initial fetch + reload after conflict
+    expect(screen.queryByRole('heading', { name: /assign tour guide/i })).not.toBeInTheDocument();
   });
 });

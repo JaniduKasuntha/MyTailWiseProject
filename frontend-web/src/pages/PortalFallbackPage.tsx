@@ -10,17 +10,17 @@ export function PortalFallbackPage() {
     user?.role === 'FleetCoordinator';
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-slate-50 px-6 text-center">
+    <div className="flex min-h-svh flex-col items-center justify-center bg-surface px-6 text-center">
       <Logo className="mb-6 h-8 w-auto" />
-      <h1 className="font-heading text-xl font-bold text-slate-900">Welcome, {user?.name}</h1>
-      <p className="mt-2 max-w-sm text-sm text-slate-500">
+      <h1 className="font-heading text-xl font-bold text-fg">Welcome, {user?.name}</h1>
+      <p className="mt-2 max-w-sm text-sm text-fg-muted">
         There isn't a full portal dashboard for the {user?.role} role yet.
       </p>
 
       {canAccessAvailability && (
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Available Features</p>
-          <p className="mt-1 text-sm font-medium text-slate-800">
+        <div className="mt-6 rounded-xl border border-border bg-surface-raised p-5 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-fg-muted">Available Features</p>
+          <p className="mt-1 text-sm font-medium text-fg">
             {user?.role === 'TourGuide' ? 'Manage your availability calendar' : 'Review guide schedules'}
           </p>
           <Link
@@ -33,13 +33,13 @@ export function PortalFallbackPage() {
             <>
               <Link
                 to="/guides/my-tours"
-                className="mt-3 ml-2 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="mt-3 ml-2 inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-fg transition hover:bg-neutral-soft"
               >
                 View My Assigned Tours
               </Link>
               <Link
                 to="/guides/profile"
-                className="mt-3 ml-2 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="mt-3 ml-2 inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-fg transition hover:bg-neutral-soft"
               >
                 Profile & Settings
               </Link>
@@ -49,9 +49,9 @@ export function PortalFallbackPage() {
       )}
 
       {user?.role === 'Driver' && (
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Driver Portal</p>
-          <p className="mt-1 text-sm font-medium text-slate-800">
+        <div className="mt-6 rounded-xl border border-border bg-surface-raised p-5 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-fg-muted">Driver Portal</p>
+          <p className="mt-1 text-sm font-medium text-fg">
             Access your assigned driving schedule and vehicle specifications.
           </p>
           <Link
@@ -65,7 +65,7 @@ export function PortalFallbackPage() {
 
       <button
         onClick={logout}
-        className="mt-6 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+        className="mt-6 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-fg transition hover:bg-neutral-soft"
       >
         Log out
       </button>
